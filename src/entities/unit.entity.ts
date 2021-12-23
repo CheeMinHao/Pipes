@@ -17,10 +17,10 @@ export class Unit {
   @Column({ type: 'varchar', unique: true })
   unitCode: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar' })
   overview: string;
 
   @ManyToOne((type) => Faculty, (faculty) => faculty.id)

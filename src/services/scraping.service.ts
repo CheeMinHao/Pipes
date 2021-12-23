@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -6,6 +6,12 @@ import { Offering } from '../entities/offering.entity';
 import CsvInput from '../dto/csvInput.dto';
 import UnitsAndOfferings from '../dto/unitsAndOfferings';
 import { Unit } from 'src/entities/unit.entity';
+import Students from '../dto/students';
+import { Faculty } from 'src/entities/faculty.entity';
+import { Student } from 'src/entities/student.entity';
+import { Campus } from 'src/entities/campus.entity';
+import { Course } from 'src/entities/course.entity';
+import { Semester } from 'src/entities/semester.entity';
 
 import { bufferToStream } from 'src/helpers/helpers';
 import { CsvParser } from 'nest-csv-parser';
@@ -17,6 +23,16 @@ export class ScrapingService {
     private readonly offeringRepository: Repository<Offering>,
     @InjectRepository(Unit)
     private readonly unitRepository: Repository<Unit>,
+    @InjectRepository(Faculty)
+    private readonly facultyRepository: Repository<Faculty>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
+    @InjectRepository(Campus)
+    private readonly campusRepository: Repository<Campus>,
+    @InjectRepository(Semester)
+    private readonly semesterRepository: Repository<Semester>,
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
   ) {}
 
   //   {
@@ -50,30 +66,105 @@ export class ScrapingService {
     inputFileStream: Express.Multer.File,
   ): Promise<boolean> {
     const jsonUnitOffering = JSON.parse(inputFileStream.buffer.toString());
-    jsonUnitOffering['data'].forEach(
-      ({
-        name,
-        overview,
-        unit_code,
-        faculty_name,
-        categories,
-        credit_point,
-        offerings,
-      }: UnitsAndOfferings) => {
-        this.offeringRepository.create();
+    const dataArray = jsonUnitOffering['data'];
 
-        console.log({
-          name,
-          overview,
-          unit_code,
-          faculty_name,
-          categories,
-          credit_point,
-          offerings,
-        });
-      },
+    //TODO: clean up variable naming
+    // const faculty = await this.facultyRepository.find();
+    // const facultyMap = faculty.reduce(
+    //   (prev, current) => ({
+    //     [current.name]: current.id,
+    //     ...prev,
+    //   }),
+    //   {},
+    // );
+    // const cleanedArray = dataArray.map((obj) => {
+    //   return {
+    //     faculty: facultyMap[obj.faculty_name.toLowerCase()],
+    //     creditPoints: parseInt(obj.credit_point),
+    //     unitCode: obj.unit_code,
+    //     overview: obj.overview,
+    //     name: obj.name,
+    //   };
+    // });
+
+    // console.log(cleanedArray);
+
+    // const result = await this.unitRepository.save(cleanedArray);
+
+    // return result;
+
+    const semesters = await this.semesterRepository.find();
+    const semesterArray = semesters.map(({ code }) => code);
+    const campuses = await this.campusRepository.find();
+
+    const unit = await this.unitRepository.find();
+    const unitMap = unit.reduce(
+      (prev, current) => ({
+        [current.unitCode.toLowerCase()]: current.id,
+        ...prev,
+      }),
+      {},
     );
-    return true;
+
+    const clean = dataArray
+      .map((obj: any) => {
+        const off = obj.offerings;
+
+        return off.map(({ year, name, location }) => {
+          const index = semesterArray.findIndex((semester) =>
+            name.includes(semester),
+          );
+          return {
+            year: year,
+            unit: unitMap[obj.unit_code.toLowerCase()],
+            semester: semesters[index].id,
+            campus: campuses.filter(
+              ({ location: lc }) => lc.toLowerCase() === location.toLowerCase(),
+            )[0],
+          };
+        });
+      })
+      .flatMap((a) => a);
+
+    return clean.length;
+  }
+
+  async readStudents(inputFileStream: Express.Multer.File): Promise<boolean> {
+    const jsonStudent = JSON.parse(inputFileStream.buffer.toString());
+    console.log(jsonStudent);
+    const dataArray = jsonStudent['data'];
+
+    const course = await this.facultyRepository.find();
+    const courseMap = course.reduce(
+      (prev, current) => ({
+        [current.name]: current.id,
+        ...prev,
+      }),
+      {},
+    );
+
+    const campus = await this.campusRepository.find();
+    const campusMap = campus.reduce(
+      (prev, current) => ({
+        [current.location]: current.id,
+        ...prev,
+      }),
+      {},
+    );
+
+    const cleanedArray = dataArray.map((obj) => {
+      return {
+        surname: obj.surname,
+        givenName: obj.given_name,
+        intake: obj.intake,
+        course: courseMap[obj.course_name.toLowerCase()],
+        campus: campusMap[obj.campus_name.toLowerCase()],
+      };
+    });
+
+    const result = await this.studentRepository.save(cleanedArray);
+
+    return result;
   }
 
   async uploadStudentCourses(
