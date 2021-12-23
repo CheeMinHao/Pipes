@@ -106,7 +106,7 @@ export class ScrapingService {
       {},
     );
 
-    const clean = dataArray
+      const clean = dataArray
       .map((obj: any) => {
         const off = obj.offerings;
 
@@ -134,37 +134,36 @@ export class ScrapingService {
     console.log(jsonStudent);
     const dataArray = jsonStudent['data'];
 
-    const course = await this.facultyRepository.find();
-    const courseMap = course.reduce(
-      (prev, current) => ({
-        [current.name]: current.id,
-        ...prev,
-      }),
-      {},
-    );
+    const campuses = await this.campusRepository.find();
+    // const unit = await this.unitRepository.find();
+    // const unitMap = unit.reduce(
+    //   (prev, current) => ({
+    //     [current.unitCode.toLowerCase()]: current.id,
+    //     ...prev,
+    //   }),
+    //   {},
+    // );
 
-    const campus = await this.campusRepository.find();
-    const campusMap = campus.reduce(
-      (prev, current) => ({
-        [current.location]: current.id,
-        ...prev,
-      }),
-      {},
-    );
+    const clean = dataArray
+      .map((obj: any) => {
+        const students = obj.students;
 
-    const cleanedArray = dataArray.map((obj) => {
-      return {
-        surname: obj.surname,
-        givenName: obj.given_name,
-        intake: obj.intake,
-        course: courseMap[obj.course_name.toLowerCase()],
-        campus: campusMap[obj.campus_name.toLowerCase()],
-      };
-    });
+        return students.map(({ surname, givenName, intake, course, location }) => {
+          return {
+            surname: surname,
+            givenName: givenName,
+            intake: intake,
+            course: course,
+            // unit: unitMap[obj.unit_code.toLowerCase()],
+            campus: campuses.filter(
+              ({ location: lc }) => lc.toLowerCase() === location.toLowerCase(),
+            )[0],
+          };
+        });
+      })
+      .flatMap((a) => a);
 
-    const result = await this.studentRepository.save(cleanedArray);
-
-    return result;
+    return clean.length;
   }
 
   async uploadStudentCourses(
