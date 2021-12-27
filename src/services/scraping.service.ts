@@ -35,32 +35,74 @@ export class ScrapingService {
     private readonly courseRepository: Repository<Course>,
   ) {}
 
-  //   {
-  //     "name": "Positive psychology",
-  //     "overview": "Positive psychology focuses on promoting optimal human functioning. Theoretical perspectives will be examined to demonstrate the impact of positive conditions in achieving desirable outcomes. Information concerning the latest evidence-based interventions about what makes people happy and how happiness is defined and measured will be presented. The relevance of positive psychology in a range of contexts and across the life span will be explored. Numerous and varied learning approaches such as debates, case studies, role plays, watching videos, keeping journals and research activities will be undertaken. This unit will be based on evidence-based knowledge and practice and will also involve an experiential component to facilitate learning.",
-  //     "unit_code": "PSY3250",
-  //     "faculty_name": "Faculty of Medicine, Nursing and Health Sciences",
-  //     "categories": [
-  //         "End of semester individual written project (2,000 - 2,500 words)",
-  //         "Digital group presentation",
-  //         "Written report (2,000 - 2,500 words) / Reflective journal (5 journal entries 8% 400-500 words)"
-  //     ],
-  //     "credit_point": "6",
-  //     "offerings": [
-  //         {
-  //             "year": 2021,
-  //             "semester": "First semester",
-  //             "location": "Malaysia",
-  //             "attendance_mode": "On-campus"
-  //         },
+  async uploadStudentCourses(
+    inputFileStream: Express.Multer.File,
+  ): Promise<any> {
+    try {
+      const readableInstanceStream = bufferToStream(inputFileStream.buffer);
+      const entities: {
+        list: CsvInput[];
+      } = await new CsvParser().parse(readableInstanceStream, CsvInput);
+      return this._sanitizeStudentCourseList(entities);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 
-  //             "year": 2020,
-  //             "semester": "First semester",
-  //             "location": "Malaysia",
-  //             "attendance_mode": "On-campus"
-  //         }
-  //     ]
-  // }
+  _sanitizeStudentCourseList(entities: any) {
+    const key = Object.keys(entities.list[0])[0];
+    const keys = key.split(',');
+
+    return entities.list.map((obj: any) =>
+      keys.reduce(
+        (prev, curr, index) => ({
+          [curr]: obj[key].split(',')[index],
+          ...prev,
+        }),
+        {},
+      ),
+    );
+  }
+
+  async readStudents(inputFileStream: Express.Multer.File): Promise<boolean> {
+    const jsonStudent = JSON.parse(inputFileStream.buffer.toString());
+    console.log(jsonStudent);
+    const dataArray = jsonStudent['data'];
+
+    const campuses = await this.campusRepository.find();
+    // const unit = await this.unitRepository.find();
+    // const unitMap = unit.reduce(
+    //   (prev, current) => ({
+    //     [current.unitCode.toLowerCase()]: current.id,
+    //     ...prev,
+    //   }),
+    //   {},
+    // );
+
+    const clean = dataArray
+      .map((obj: any) => {
+        const students = obj.students;
+
+        return students.map(
+          ({ surname, givenName, intake, course, location }) => {
+            return {
+              surname: surname,
+              givenName: givenName,
+              intake: intake,
+              course: course,
+              // unit: unitMap[obj.unit_code.toLowerCase()],
+              campus: campuses.filter(
+                ({ location: lc }) =>
+                  lc.toLowerCase() === location.toLowerCase(),
+              )[0],
+            };
+          },
+        );
+      })
+      .flatMap((a) => a);
+
+    return clean.length;
+  }
 
   async readUnitsAndOfferings(
     inputFileStream: Express.Multer.File,
@@ -106,7 +148,7 @@ export class ScrapingService {
       {},
     );
 
-      const clean = dataArray
+    const clean = dataArray
       .map((obj: any) => {
         const off = obj.offerings;
 
@@ -127,77 +169,5 @@ export class ScrapingService {
       .flatMap((a) => a);
 
     return clean.length;
-  }
-
-  async readStudents(inputFileStream: Express.Multer.File): Promise<boolean> {
-    const jsonStudent = JSON.parse(inputFileStream.buffer.toString());
-    console.log(jsonStudent);
-    const dataArray = jsonStudent['data'];
-
-    const campuses = await this.campusRepository.find();
-    // const unit = await this.unitRepository.find();
-    // const unitMap = unit.reduce(
-    //   (prev, current) => ({
-    //     [current.unitCode.toLowerCase()]: current.id,
-    //     ...prev,
-    //   }),
-    //   {},
-    // );
-
-    const clean = dataArray
-      .map((obj: any) => {
-        const students = obj.students;
-
-        return students.map(({ surname, givenName, intake, course, location }) => {
-          return {
-            surname: surname,
-            givenName: givenName,
-            intake: intake,
-            course: course,
-            // unit: unitMap[obj.unit_code.toLowerCase()],
-            campus: campuses.filter(
-              ({ location: lc }) => lc.toLowerCase() === location.toLowerCase(),
-            )[0],
-          };
-        });
-      })
-      .flatMap((a) => a);
-
-    return clean.length;
-  }
-
-  async uploadStudentCourses(
-    inputFileStream: Express.Multer.File,
-  ): Promise<any> {
-    try {
-      const readableInstanceStream = bufferToStream(inputFileStream.buffer);
-      const entities: {
-        list: CsvInput[];
-      } = await new CsvParser().parse(readableInstanceStream, CsvInput);
-      const key = Object.keys(entities.list[0])[0];
-      const processList = async (data) => {
-        return data[key].split(',');
-      };
-      const listEntities: CsvInput[] = entities.list;
-      listEntities.map(processList);
-      // console.log(
-      //   'Parallel JS ----------------------------------------------------------------',
-      // );
-      // console.time('test2');
-      // var p = new Parallel(listEntities);
-      // await p.map(test);
-      // console.timeEnd('test2');
-      // console.log(
-      //   'For Loop ----------------------------------------------------------------',
-      // );
-      // console.time('test4');
-      // for (let i = 0, l = listEntities.length; i < l; i++) {
-      //   const hehe = test(listEntities[i]);
-      // }
-      // console.timeEnd('test4');
-      return entities?.list;
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
   }
 }
