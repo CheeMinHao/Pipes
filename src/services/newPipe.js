@@ -89,20 +89,15 @@ const parseLogic = (obj) => {
 const parseLogicArray = (obj, array) => {
   const flatten = array.map(({ code }) => code);
   const logic = obj.logical;
-  let currentBoolean;
+  let currentBoolean = undefined;
   for (let i = 0; i < obj.group.length; i++) {
     let resolved;
-    if (obj.group[i].logical) {
-      resolved = parseLogicArray(obj.group[i], array);
-    } else {
-      resolved = flatten.includes(obj.group[i].code); // base case
-    }
-    !currentBoolean
-      ? (currentBoolean = resolved)
-      : (currentBoolean =
-          logic === '&&'
-            ? currentBoolean && resolved
-            : currentBoolean || resolved);
+    if (obj.group[i].logical) resolved = parseLogicArray(obj.group[i], array);
+    else resolved = flatten.includes(obj.group[i].code); // base case
+
+    if (currentBoolean === undefined) currentBoolean = resolved;
+    else if (logic === '&&') currentBoolean = currentBoolean && resolved;
+    else currentBoolean = currentBoolean || resolved;
   }
   return currentBoolean;
 };
@@ -120,23 +115,34 @@ console.log(
         { code: 'FIT2004', creditPoints: 6, tag: 2 },
         { code: 'FIT1047', creditPoints: 6, tag: 1 },
         {
-          logical: '&&',
+          logical: '||',
           group: [
-            { code: 'FIT3199', creditPoints: 0 },
-            { code: 'FIT3045', creditPoints: 18 },
+            {
+              logical: '&&',
+              group: [
+                { code: 'abc', creditPoints: 0 },
+                { code: '123', creditPoints: 18 },
+              ],
+            },
+            {
+              logical: '&&',
+              group: [
+                { code: 'FIT3199', creditPoints: 0 },
+                { code: 'FIT3045', creditPoints: 18 },
+              ],
+            },
           ],
         },
       ],
     },
     [
       { code: 'FIT2014', creditPoints: 6, tag: 2 },
+      { code: 'FIT1008', creditPoints: 6, tag: 1 },
       { code: 'MAT1830', creditPoints: 6, tag: 1 },
       { code: 'MAT1841', creditPoints: 6, tag: 1 },
       { code: 'FIT1045', creditPoints: 6, tag: 1 },
       { code: 'FIT2004', creditPoints: 6, tag: 2 },
       { code: 'FIT1047', creditPoints: 6, tag: 1 },
-      { code: 'FIT3199', creditPoints: 0 },
-      { code: 'FIT3045', creditPoints: 18 },
     ],
   ),
 );
