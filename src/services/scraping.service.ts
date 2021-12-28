@@ -43,6 +43,7 @@ export class ScrapingService {
       const entities: {
         list: CsvInput[];
       } = await new CsvParser().parse(readableInstanceStream, CsvInput);
+      this.validateCourseStatus(this._sanitizeStudentCourseList(entities));
       return this._sanitizeStudentCourseList(entities);
     } catch (error) {
       throw new BadRequestException(error);
@@ -169,5 +170,31 @@ export class ScrapingService {
       .flatMap((a) => a);
 
     return clean.length;
+  }
+
+  //Group csv file data by Person Id ('Student ID')
+  async validateCourseStatus(csvQueries: Array<any>[]) {
+    //build in group function
+    const groupBy = function (xs: any, key) {
+      return xs.reduce(function (rv: any, x: any) {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+      }, {});
+    };
+    const groupedByPersonID = groupBy(csvQueries, 'Person ID');
+    //console.log(groupedByPersonID);
+    for (var studentID in groupedByPersonID) {
+      //Get the student id
+      console.log(studentID);
+      //Get the course info
+      const courseCode = groupedByPersonID[studentID][0]['COURSE_CD'];
+      console.log(courseCode);
+      console.log(groupedByPersonID[studentID][0]['CRS_TITLE']);
+      console.log(groupedByPersonID[studentID]);
+
+      for (var enrolledUnitObj of groupedByPersonID[studentID]) {
+        // console.log(enrolledUnitObj);
+      }
+    }
   }
 }
