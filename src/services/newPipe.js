@@ -1,57 +1,35 @@
-const GeneralStudies = {
-  localGeneralStudies: [
-    { code: 'MPU3113', creditPoint: 0 },
-    { code: 'MPU3123', creditPoint: 0 },
-    { code: 'MPU3212', creditPoint: 0 },
-  ],
-  internationalGeneralStudies: [
-    { code: 'MPU3143', creditPoint: 0 },
-    { code: 'MPU3173', creditPoint: 0 },
-  ],
-};
+const fs = require('fs');
+const rules = JSON.parse(fs.readFileSync('../rules/C2001.json'));
 
-const studentData = {
-  isLocal: true,
-  course: 'C2001 ',
-  takenUnits: [
-    { code: 'FIT2014', creditPoints: 6 },
-    { code: 'FIT2102', creditPoints: 6 },
-    { code: 'HAHA123', creditPoints: 18 },
-  ],
-};
-
-const courseRelatedData = {
-  course: 'C2001 ',
-  creditToCompleteCourse: 144,
-  coreUnits: [
-    { code: 'FIT2014', creditPoints: 6 },
-    { code: 'FIT1008', creditPoints: 6 },
-    { code: 'MAT1830', creditPoints: 6 },
-    { code: 'MAT1841', creditPoints: 6 },
-    { code: 'FIT1045', creditPoints: 6 },
-    { code: 'FIT2004', creditPoints: 6 },
-    { code: 'FIT1047', creditPoints: 6 },
-    { code: 'FIT2014', creditPoints: 6 },
-  ],
-  mandatoryNonCoreUnits: [
+const C2001 = {
+  totalCreditPoints: 144,
+  additionalRules: [
     {
-      logical: '||',
-      group: [
-        { code: 'FIT3199', creditPoints: 0 },
-        { code: 'HAHA123', creditPoints: 18 },
-      ],
+      name: 'Level 3 Credit Points Summation',
+      category: 'creditPoints',
+      tag: 3,
+      targetValue: 36,
+      evalOperator: 'eq',
+      operation: 'sum',
     },
-  ],
-};
-
-const C2001DS = (extraParam = {}, extraValid = {}) => ({
-  extraValidation: [
-    { rule: 'levelCheck3', result: 36 },
-    { rule: 'levelCheck2', result: 36 },
-    ...extraValid,
+    {
+      name: 'Level 1 Credit Points Summation',
+      category: 'creditPoints',
+      tag: 1,
+      targetValue: 60,
+      evalOperator: 'lte',
+      operation: 'sum',
+    },
   ],
   rules: {
     logical: '&&',
+    aggregationRule: {
+      targetValue: 2,
+      name: 'Overall',
+      value: 'creditPoints',
+      evalOperator: 'mte',
+      operation: 'count',
+    },
     group: [
       { code: 'FIT2014', creditPoints: 6, tag: 2 },
       { code: 'FIT1008', creditPoints: 6, tag: 1 },
@@ -63,188 +41,200 @@ const C2001DS = (extraParam = {}, extraValid = {}) => ({
       { code: 'FIT2014', creditPoints: 6, tag: 2 },
       {
         logical: '||',
+        aggregationRule: {
+          targetValue: 2,
+          name: 'Level 3',
+          value: 'creditPoints',
+          evalOperator: 'mte',
+          operation: 'sum',
+        },
         group: [
+          { code: 'FIT3abc', creditPoints: 0 },
+          { code: 'FIT3122', creditPoints: 18 },
+          { code: 'FIT3123', creditPoints: 18 },
           { code: 'FIT3199', creditPoints: 0 },
           { code: 'FIT3045', creditPoints: 18 },
         ],
       },
-      ...extraParam,
     ],
   },
-});
-
-const parseLogic = (obj) => {
-  const logic = obj.logical;
-  let currentString = '';
-  for (let i = 0; i < obj.group.length; i++) {
-    const end = i === obj.group.length - 1 ? '' : logic;
-    let resolved;
-    if (obj.group[i].logical) resolved = `(${parseLogic(obj.group[i])})`;
-    else resolved = obj.group[i].code; // base case
-    currentString = `${currentString} ${resolved} ${end}`;
-  }
-  return currentString;
 };
 
-const parseLogicArray = (obj, array) => {
-  const flatten = array.map(({ code }) => code);
-  const logic = obj.logical;
-  let currentBoolean = undefined;
-  for (let i = 0; i < obj.group.length; i++) {
-    let resolved;
-    if (obj.group[i].logical) resolved = parseLogicArray(obj.group[i], array);
-    else resolved = flatten.includes(obj.group[i].code); // base case
-
-    if (currentBoolean === undefined) currentBoolean = resolved;
-    else if (logic === '&&') currentBoolean = currentBoolean && resolved;
-    else currentBoolean = currentBoolean || resolved;
+const processAdditionalRules = (takenCourses, rule) => {
+  const evalOperatorMapper = {
+    eq: '==',
+    lte: '<=',
+    mte: '>=',
+    mt: '>',
+    lt: '<',
+  };
+  const { category, operation, tag, evalOperator } = rule;
+  switch (category) {
+    case 'creditPoints':
+      let achievedValue = 0;
+      switch (operation) {
+        case 'sum':
+          achievedValue = takenCourses.reduce((acc, currentCourse) => {
+            return currentCourse.tag === tag
+              ? acc + currentCourse.creditPoints
+              : acc;
+          }, 0);
+          break;
+        case 'count':
+          achievedValue = takenCourses.reduce((acc, currentCourse) => {
+            return currentCourse.tag === tag ? acc + 1 : acc;
+          }, 0);
+          break;
+        default:
+          break;
+      }
+      return {
+        ...rule,
+        achievedValue,
+        passedRule: eval(
+          `${achievedValue}${evalOperatorMapper[evalOperator]}${rule.targetValue}`,
+        ),
+      };
+      break;
+    default:
+      break;
   }
-  return currentBoolean;
 };
 
-console.log(
-  parseLogicArray(
-    {
-      logical: '&&',
-      group: [
-        { code: 'FIT2014', creditPoints: 6, tag: 2 },
-        { code: 'FIT1008', creditPoints: 6, tag: 1 },
-        { code: 'MAT1830', creditPoints: 6, tag: 1 },
-        { code: 'MAT1841', creditPoints: 6, tag: 1 },
-        { code: 'FIT1045', creditPoints: 6, tag: 1 },
-        { code: 'FIT2004', creditPoints: 6, tag: 2 },
-        { code: 'FIT1047', creditPoints: 6, tag: 1 },
-        {
-          logical: '||',
-          group: [
-            {
-              logical: '&&',
-              group: [
-                { code: 'abc', creditPoints: 0 },
-                { code: '123', creditPoints: 18 },
-              ],
-            },
-            {
-              logical: '&&',
-              group: [
-                { code: 'FIT3199', creditPoints: 0 },
-                { code: 'FIT3045', creditPoints: 18 },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    [
-      { code: 'FIT2014', creditPoints: 6, tag: 2 },
-      { code: 'FIT1008', creditPoints: 6, tag: 1 },
-      { code: 'MAT1830', creditPoints: 6, tag: 1 },
-      { code: 'MAT1841', creditPoints: 6, tag: 1 },
-      { code: 'FIT1045', creditPoints: 6, tag: 1 },
-      { code: 'FIT2004', creditPoints: 6, tag: 2 },
-      { code: 'FIT1047', creditPoints: 6, tag: 1 },
-    ],
-  ),
-);
-
-// +(FIT3199 || HAHA123 ) || asdsad32432432  || (21321 && abc)+ && +(123)+
-
-/** Return a boolean whether student is eligible to graduate
- *True- Student is eligible to graduate
- */
-const evaluatePipe = (
-  { isLocal, course, takenUnits },
-  { creditToCompleteCourse, coreUnits, mandatoryNonCoreUnits },
+const parseLogicObjectA = (
+  { rules, additionalRules, totalCreditPoints },
+  takenCourses,
 ) => {
-  // Evaluation
-  // checkCredit points
-  const currentCreditPoints = takenUnits
-    .concat(mandatoryNonCoreUnits)
-    .reduce((prev, { creditPoints }) => prev + creditPoints, 0);
-  const percentage = currentCreditPoints / creditToCompleteCourse;
-
-  // check GS courses
-  const requiredGeneralStudiesSubjects = isLocal
-    ? GeneralStudies.localGeneralStudies
-    : GeneralStudies.internationalGeneralStudies;
-  const gSStatusBreakdown = _similarDifference(
-    takenUnits,
-    requiredGeneralStudiesSubjects,
-    'code',
+  const coreRulesResults = checkRules(
+    rules,
+    takenCourses.map(({ code }) => code),
+  );
+  const additionalRulesResult = additionalRules.map((rule) =>
+    processAdditionalRules(takenCourses, rule),
+  );
+  const creditsTakenByStudents = takenCourses.reduce(
+    (prev, current) => prev + current.creditPoints,
+    0,
   );
 
-  // check core units
-  const coreStatusBreakdown = _similarDifference(takenUnits, coreUnits, 'code');
-  const passCreditPoints = percentage >= 1;
-  const passCoreUnits =
-    coreStatusBreakdown.completed === coreStatusBreakdown.total;
-  const passGeneralStudies =
-    gSStatusBreakdown.completed === gSStatusBreakdown.total;
-  const passedLevelChecks = needCheckLevel
-    ? _checkNumberOfCreditsLevel(takenUnits, 3, 36)
-    : true;
-
-  return {
-    canGraduate:
-      passCreditPoints &&
-      passCoreUnits &&
-      passGeneralStudies &&
-      passedLevelChecks,
-    creditPointPercentage: percentage,
-  };
+  return JSON.stringify({
+    coreRulesResults,
+    additionalRulesResult,
+    creditsTakenByStudents,
+    requiredCreditPoints: totalCreditPoints,
+  });
 };
 
-const _checkNumberOfCreditsLevel = (
-  takenUnits,
-  levelToCheck,
-  creditsRequired,
-) => {
-  let total = 0;
-  for (let i = 0; i < takenUnits.length; i++) {
-    if (takenUnits[i].level === levelToCheck) {
-      total += unit.creditPoint;
-      if (total === creditsRequired) {
-        return true;
-      }
+const checkRules = (rules, takenCourses, aggregationRule = []) => {
+  const { logical: logic, group, aggregationRule: agg } = rules;
+  let curr = { result: undefined, fails: [] };
+  const aggAggregation = agg ? [...aggregationRule, agg] : aggregationRule;
+
+  for (let i = 0; i < group.length; i++) {
+    let resolved;
+    if (group[i].logical) {
+      resolved = checkRules(group[i], takenCourses, aggAggregation);
+      resolved = { ...resolved, child: true };
+    } else {
+      const failed = [];
+      const isIn = takenCourses.includes(group[i].code);
+      if (!isIn) failed.push(group[i]);
+      resolved = { result: isIn, fails: failed };
+
+      aggAggregation.forEach(({ name, value, operation }) => {
+        switch (operation) {
+          case 'sum':
+            resolved = {
+              ...resolved,
+              [name]: isIn ? group[i][value] : 0,
+            };
+            break;
+          case 'count':
+            resolved = { ...resolved, [name]: isIn ? 1 : 0 };
+            break;
+          default:
+            break;
+        }
+      });
     }
+
+    aggAggregation.forEach(({ name, operation }) => {
+      const returnedValue = resolved[name];
+      switch (operation) {
+        case 'sum':
+          if (!curr[name]) curr = { ...curr, [name]: 0 };
+          curr = { ...curr, [name]: curr[name] + (returnedValue || 0) };
+          break;
+        case 'count':
+          if (!curr[name]) curr = { ...curr, [name]: 0 };
+          curr = { ...curr, [name]: (curr[name] || 0) + returnedValue };
+          break;
+        default:
+          break;
+      }
+    });
+
+    console.log(curr, 'blaise ');
+
+    const { result: rR, fails: rF, child } = resolved;
+    const { result: cR, fails: cF } = curr;
+
+    if (cR === undefined) curr = { ...curr, result: rR };
+    else if (logic === '&&')
+      curr = {
+        ...curr,
+        result: cR && rR,
+        fails: cF.concat(rF),
+      };
+    else
+      curr = {
+        ...curr,
+        result: cR || rR,
+      };
+
+    if (child)
+      curr = {
+        ...curr,
+        ...remaining,
+      };
   }
-  return false;
+
+  if (!curr.result && logic === '||') {
+    curr = {
+      ...curr,
+      fails: [...curr.fails, { chooseBy: 'OR', courses: group }],
+    };
+  }
+
+  return curr;
 };
 
-const _setIntersection = (a, b, compareBy) => {
-  var setA = new Set(a.map((a) => a[compareBy]));
-  var setB = new Set(b.map((b) => b[compareBy]));
-  var intersection = new Set([...setA].filter((x) => setB.has(x)));
-  return Array.from(intersection);
-};
+// FE Button to upload file
+// SEND to BE preprocess the csv
+// Feed processed data into the parseLogicObjectA
+// parseLogicObjectA will pick the suitable rule based on the student's info
+// Parser does it's magic
+// BE: Handle aggregation rule to return boolean and also statistics
+// Prepare rules for courses in dummy data
+// return required numbers for FE to display in table
+// Export as Excel
 
-const _similarDifference = (comparee, comparedTo, compareBy) => {
-  const comparedToLength = comparedTo.length;
-  const intersectArrayLength = _setIntersection(
-    comparee,
-    comparedTo,
-    compareBy,
-  ).length;
+console.log(
+  parseLogicObjectA(C2001, [
+    { code: 'FIT2014', creditPoints: 6, tag: 2 },
+    { code: 'FIT1008', creditPoints: 6, tag: 1 },
+    { code: 'MAT1830', creditPoints: 6, tag: 1 },
+    { code: 'MAT1841', creditPoints: 6, tag: 1 },
+    { code: 'FIT1045', creditPoints: 6, tag: 1 },
+    { code: 'FIT2004', creditPoints: 6, tag: 2 },
+    { code: 'FIT1047', creditPoints: 6, tag: 1 },
+    { code: 'FIT2014', creditPoints: 6, tag: 2 },
+    { code: 'FIT3abc', creditPoints: 0 },
+    { code: 'FIT3122', creditPoints: 18 },
+    { code: 'FIT3123', creditPoints: 18 },
+    { code: 'FIT3199', creditPoints: 0 },
+    { code: 'FIT3045', creditPoints: 18 },
+  ]),
+);
 
-  return {
-    completed: intersectArrayLength,
-    incompleted: comparedToLength - intersectArrayLength,
-    total: comparedToLength,
-  };
-};
-
-/**
- * Return a number that represents a percentage
- * Core Units, Internship, General Studies
- */
-
-/**
- * Malaysian Students	
-  MPU3113 Ethnic Relations
-  MPU3123 Islamic and Asian Civilisations
-  MPU3212 National Language A	
-
-  International Students
-  MPU3143 Communicative Malay 2
-  MPU3173 Malaysian Studies 3
- */
+// 48 + 54 => 102
