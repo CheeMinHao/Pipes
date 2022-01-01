@@ -7,8 +7,3 @@ export class AppService {
     return 'Hello World!';
   }
 }
-// test: 0.160ms
-// test: 0.061ms
-// test: 0.085ms
-// test: 0.067ms
-// test: 0.090ms

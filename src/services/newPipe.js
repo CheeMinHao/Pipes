@@ -1,63 +1,8 @@
+// import { getRules } from 'src/helpers/helpers';
 const fs = require('fs');
-const rules = JSON.parse(fs.readFileSync('../rules/C2001.json'));
 
-const C2001 = {
-  totalCreditPoints: 144,
-  additionalRules: [
-    {
-      name: 'Level 3 Credit Points Summation',
-      category: 'creditPoints',
-      tag: 3,
-      targetValue: 36,
-      evalOperator: 'eq',
-      operation: 'sum',
-    },
-    {
-      name: 'Level 1 Credit Points Summation',
-      category: 'creditPoints',
-      tag: 1,
-      targetValue: 60,
-      evalOperator: 'lte',
-      operation: 'sum',
-    },
-  ],
-  rules: {
-    logical: '&&',
-    aggregationRule: {
-      targetValue: 2,
-      name: 'Overall',
-      value: 'creditPoints',
-      evalOperator: 'mte',
-      operation: 'count',
-    },
-    group: [
-      { code: 'FIT2014', creditPoints: 6, tag: 2 },
-      { code: 'FIT1008', creditPoints: 6, tag: 1 },
-      { code: 'MAT1830', creditPoints: 6, tag: 1 },
-      { code: 'MAT1841', creditPoints: 6, tag: 1 },
-      { code: 'FIT1045', creditPoints: 6, tag: 1 },
-      { code: 'FIT2004', creditPoints: 6, tag: 2 },
-      { code: 'FIT1047', creditPoints: 6, tag: 1 },
-      { code: 'FIT2014', creditPoints: 6, tag: 2 },
-      {
-        logical: '||',
-        aggregationRule: {
-          targetValue: 2,
-          name: 'Level 3',
-          value: 'creditPoints',
-          evalOperator: 'mte',
-          operation: 'sum',
-        },
-        group: [
-          { code: 'FIT3abc', creditPoints: 0 },
-          { code: 'FIT3122', creditPoints: 18 },
-          { code: 'FIT3123', creditPoints: 18 },
-          { code: 'FIT3199', creditPoints: 0 },
-          { code: 'FIT3045', creditPoints: 18 },
-        ],
-      },
-    ],
-  },
+const getRules = (courseCode) => {
+  return JSON.parse(fs.readFileSync(`../rules/${courseCode}.json`));
 };
 
 const processAdditionalRules = (takenCourses, rule) => {
@@ -95,23 +40,31 @@ const processAdditionalRules = (takenCourses, rule) => {
           `${achievedValue}${evalOperatorMapper[evalOperator]}${rule.targetValue}`,
         ),
       };
-      break;
     default:
       break;
   }
 };
 
 const parseLogicObjectA = (
-  { rules, additionalRules, totalCreditPoints },
+  { isInternational = false, courseCode = 'C2001' },
   takenCourses,
 ) => {
+  const { rules, additionalRules, totalCreditPoints } = getRules(courseCode);
+
+  // Inject additional rules
+  const { rules: MPUInter } = getRules('MPU_International');
+  const { rules: MPULocal } = getRules('MPU_local');
+  rules.group = [...rules.group, isInternational ? MPUInter : MPULocal];
+
   const coreRulesResults = checkRules(
     rules,
     takenCourses.map(({ code }) => code),
   );
+
   const additionalRulesResult = additionalRules.map((rule) =>
     processAdditionalRules(takenCourses, rule),
   );
+
   const creditsTakenByStudents = takenCourses.reduce(
     (prev, current) => prev + current.creditPoints,
     0,
@@ -125,102 +78,61 @@ const parseLogicObjectA = (
   });
 };
 
-const checkRules = (rules, takenCourses, aggregationRule = []) => {
-  const { logical: logic, group, aggregationRule: agg } = rules;
-  let curr = { result: undefined, fails: [] };
-  const aggAggregation = agg ? [...aggregationRule, agg] : aggregationRule;
+const checkRules = (rules, subject, prevAggRules = []) => {
+  const { logical, aggregationRule, group } = rules;
+  let result = undefined;
+  let recRes = [];
+  let fails = [];
 
-  for (let i = 0; i < group.length; i++) {
-    let resolved;
-    if (group[i].logical) {
-      resolved = checkRules(group[i], takenCourses, aggAggregation);
-      resolved = { ...resolved, child: true };
+  //Adds the current aggegation rule if any
+  const currAggRules = Boolean(aggregationRule)
+    ? [...prevAggRules, aggregationRule]
+    : prevAggRules;
+
+  group.forEach((r) => {
+    if (Boolean(r.logical)) {
+      const resolved = checkRules(r, subject, currAggRules);
+      const { result: res, fails: fa, ...remain } = resolved;
+      if (!Boolean(result)) result = res;
+      else if (logical === '&&') result = result && res;
+      else if (logical === '||') result = result || res;
+      fails = fails.concat(fa);
+      recRes.push(remain);
     } else {
-      const failed = [];
-      const isIn = takenCourses.includes(group[i].code);
-      if (!isIn) failed.push(group[i]);
-      resolved = { result: isIn, fails: failed };
-
-      aggAggregation.forEach(({ name, value, operation }) => {
-        switch (operation) {
-          case 'sum':
-            resolved = {
-              ...resolved,
-              [name]: isIn ? group[i][value] : 0,
-            };
-            break;
-          case 'count':
-            resolved = { ...resolved, [name]: isIn ? 1 : 0 };
-            break;
-          default:
-            break;
-        }
-      });
+      const isIn = subject.includes(r.code);
+      if (!isIn) fails.push(r);
+      //else passed.push(r);
+      if (!Boolean(result)) result = isIn;
+      else if (logical === '&&') result = result && isIn;
+      else if (logical === '||') result = result || isIn;
     }
+  });
 
-    aggAggregation.forEach(({ name, operation }) => {
-      const returnedValue = resolved[name];
-      switch (operation) {
-        case 'sum':
-          if (!curr[name]) curr = { ...curr, [name]: 0 };
-          curr = { ...curr, [name]: curr[name] + (returnedValue || 0) };
-          break;
-        case 'count':
-          if (!curr[name]) curr = { ...curr, [name]: 0 };
-          curr = { ...curr, [name]: (curr[name] || 0) + returnedValue };
-          break;
-        default:
-          break;
-      }
-    });
-
-    console.log(curr, 'blaise ');
-
-    const { result: rR, fails: rF, child } = resolved;
-    const { result: cR, fails: cF } = curr;
-
-    if (cR === undefined) curr = { ...curr, result: rR };
-    else if (logic === '&&')
-      curr = {
-        ...curr,
-        result: cR && rR,
-        fails: cF.concat(rF),
-      };
-    else
-      curr = {
-        ...curr,
-        result: cR || rR,
-      };
-
-    if (child)
-      curr = {
-        ...curr,
-        ...remaining,
-      };
+  if (logical === '||') {
+    if (fails.length !== group.length) fails = [];
+    else fails = [{ operation: 'OR', fails }];
   }
 
-  if (!curr.result && logic === '||') {
-    curr = {
-      ...curr,
-      fails: [...curr.fails, { chooseBy: 'OR', courses: group }],
-    };
-  }
-
-  return curr;
+  return {
+    result,
+    fails,
+    // ...resAgg,
+  };
 };
 
-// FE Button to upload file
-// SEND to BE preprocess the csv
-// Feed processed data into the parseLogicObjectA
-// parseLogicObjectA will pick the suitable rule based on the student's info
-// Parser does it's magic
-// BE: Handle aggregation rule to return boolean and also statistics
-// Prepare rules for courses in dummy data
-// return required numbers for FE to display in table
-// Export as Excel
+const operationDecider = (operation, value1, value2) => {
+  switch (operation) {
+    case 'sum':
+      return value1 + value2;
+    case 'count':
+      return value1 + 1;
+    default:
+      return value1;
+  }
+};
 
 console.log(
-  parseLogicObjectA(C2001, [
+  parseLogicObjectA({ isInternational: true }, [
     { code: 'FIT2014', creditPoints: 6, tag: 2 },
     { code: 'FIT1008', creditPoints: 6, tag: 1 },
     { code: 'MAT1830', creditPoints: 6, tag: 1 },
@@ -236,5 +148,3 @@ console.log(
     { code: 'FIT3045', creditPoints: 18 },
   ]),
 );
-
-// 48 + 54 => 102
