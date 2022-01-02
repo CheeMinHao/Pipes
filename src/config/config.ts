@@ -7,10 +7,10 @@ export const dbConfig = {
   database: process.env.DATABASE,
   username: process.env.USERNAME,
   password: process.env.PASSWORD,
-  entities: ['src/entities/**.entity.ts'],
+  entities: [__dirname + '/../entities/**.entity{.ts,.js}'],
   synchronize: false,
   logging: [],
-  migrations: ['src/migrations/**/*.ts'],
+  migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
   cli: {
     migrationsDir: 'src/migrations',
   },
