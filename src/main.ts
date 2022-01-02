@@ -7,7 +7,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const corsOptions = {
-    origin: ['http://localhost:3001', 'http://localhost:56107'],
+    origin: [
+      'http://localhost:3001',
+      'http://localhost:56107',
+      'https://cocky-mcnulty-e456f6.netlify.app',
+    ],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   };
