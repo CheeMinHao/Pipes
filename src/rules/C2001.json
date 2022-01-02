@@ -1,0 +1,91 @@
+{
+  "totalCreditPoints": 144,
+  "additionalRules": [
+    {
+      "name": "Level 3 Credit Points Summation",
+      "category": "creditPoints",
+      "tag": 3,
+      "targetValue": 36,
+      "evalOperator": "eq",
+      "operation": "sum"
+    },
+    {
+      "name": "Level 1 Credit Points Summation",
+      "category": "creditPoints",
+      "tag": 1,
+      "targetValue": 60,
+      "evalOperator": "lte",
+      "operation": "sum"
+    }
+  ],
+  "rules": {
+    "logical": "&&",
+    "group": [
+      {
+        "code": "FIT2014",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT1008",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "MAT1830",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "MAT1841",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FIT1045",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FIT2004",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT1047",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FIT2014",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "logical": "||",
+        "group": [
+          {
+            "code": "FIT3abc",
+            "creditPoints": 0
+          },
+          {
+            "code": "FIT3122",
+            "creditPoints": 18
+          },
+          {
+            "code": "FIT3123",
+            "creditPoints": 18
+          },
+          {
+            "code": "FIT3199",
+            "creditPoints": 0
+          },
+          {
+            "code": "FIT3045",
+            "creditPoints": 18
+          }
+        ]
+      }
+    ]
+  }
+}

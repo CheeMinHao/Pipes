@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScrapingController } from 'src/controllers/scraping.controller';
+import { ProcessController } from 'src/controllers/process.controller';
+
 import { ScrapingService } from 'src/services/scraping.service';
+import { CourseEngineService } from 'src/services/course_engine.service';
+
 import { Offering } from 'src/entities/offering.entity';
 import { Unit } from 'src/entities/unit.entity';
 import { CsvModule } from 'nest-csv-parser';
@@ -24,7 +28,7 @@ import { Semester } from 'src/entities/semester.entity';
     ]),
     CsvModule,
   ],
-  providers: [ScrapingService],
-  controllers: [ScrapingController],
+  providers: [ScrapingService, CourseEngineService],
+  controllers: [ScrapingController, ProcessController],
 })
 export class ApiModule {}

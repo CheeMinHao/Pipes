@@ -1,4 +1,5 @@
 const { Readable } = require('stream');
+const fs = require('fs');
 
 /**
  * @param binary Buffer
@@ -13,4 +14,8 @@ export function bufferToStream(binary) {
   });
 
   return readableInstanceStream;
+}
+
+export function getRules(courseCode) {
+  return JSON.parse(fs.readFileSync(`src/rules/${courseCode}.json`));
 }

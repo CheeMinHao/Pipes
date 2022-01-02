@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "logical": "&&",
+    "group": [
+      { "code": "MPU3113", "creditPoints": 0, "tag": 2 },
+      { "code": "MPU3123", "creditPoints": 0, "tag": 2 },
+      { "code": "MPU3212", "creditPoints": 0, "tag": 2 }
+    ]
+  }
+}
