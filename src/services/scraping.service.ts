@@ -71,14 +71,6 @@ export class ScrapingService {
     const dataArray = jsonStudent['data'];
 
     const campuses = await this.campusRepository.find();
-    // const unit = await this.unitRepository.find();
-    // const unitMap = unit.reduce(
-    //   (prev, current) => ({
-    //     [current.unitCode.toLowerCase()]: current.id,
-    //     ...prev,
-    //   }),
-    //   {},
-    // );
 
     const clean = dataArray
       .map((obj: any) => {
@@ -91,7 +83,6 @@ export class ScrapingService {
               givenName: givenName,
               intake: intake,
               course: course,
-              // unit: unitMap[obj.unit_code.toLowerCase()],
               campus: campuses.filter(
                 ({ location: lc }) =>
                   lc.toLowerCase() === location.toLowerCase(),
@@ -110,31 +101,6 @@ export class ScrapingService {
   ): Promise<boolean> {
     const jsonUnitOffering = JSON.parse(inputFileStream.buffer.toString());
     const dataArray = jsonUnitOffering['data'];
-
-    //TODO: clean up variable naming
-    // const faculty = await this.facultyRepository.find();
-    // const facultyMap = faculty.reduce(
-    //   (prev, current) => ({
-    //     [current.name]: current.id,
-    //     ...prev,
-    //   }),
-    //   {},
-    // );
-    // const cleanedArray = dataArray.map((obj) => {
-    //   return {
-    //     faculty: facultyMap[obj.faculty_name.toLowerCase()],
-    //     creditPoints: parseInt(obj.credit_point),
-    //     unitCode: obj.unit_code,
-    //     overview: obj.overview,
-    //     name: obj.name,
-    //   };
-    // });
-
-    // console.log(cleanedArray);
-
-    // const result = await this.unitRepository.save(cleanedArray);
-
-    // return result;
 
     const semesters = await this.semesterRepository.find();
     const semesterArray = semesters.map(({ code }) => code);
