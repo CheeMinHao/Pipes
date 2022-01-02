@@ -94,7 +94,7 @@ export class CourseEngineService {
     };
   }
 
-  async processStudent({ isInternational, courseCode }, takenCourses) {
+  processStudent({ isInternational, courseCode }, takenCourses) {
     const { rules, additionalRules, totalCreditPoints } = getRules(courseCode);
 
     // Inject additional rules
@@ -123,4 +123,30 @@ export class CourseEngineService {
       requiredCreditPoints: totalCreditPoints,
     };
   }
+
+  processStudentBulk = (jsonList: any[]) => {
+    const students = {};
+    jsonList.forEach((obj) => {
+      const { 'Person ID': id } = obj;
+      if (!students[id]) students[id] = [];
+      students[id].push({ ...obj, code: obj['UNIT_CD'], creditPoints: 6 });
+    });
+
+    return Object.keys(students).map((key) => {
+      const currentStudent = students[key][0];
+      return {
+        studentID: currentStudent['Person ID'],
+        course: `${currentStudent['COURSE_CD']} ${currentStudent['CRS_TITLE']}`,
+        name: `${currentStudent['Given names']} ${currentStudent['Surname']}`,
+        takenUnits: students[key].map(({ code }) => code),
+        result: this.processStudent(
+          {
+            isInternational: true,
+            courseCode: currentStudent['COURSE_CD'],
+          },
+          students[key],
+        ),
+      };
+    });
+  };
 }
