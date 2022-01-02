@@ -8,10 +8,10 @@ Front End Repo [here](https://github.com/PVCPipes/pipes-frontend).
 
 ## Technical Workflow
 
-1. Staff logs into the platform
-2. Staff uploads the csv file generated from Callista
-3. Results are generated on another page, in which a link is provided for every generation of result
-4. Staff can revisit the results using the link provided
+1. File is uploaded from Front End
+2. Information is parsed to be in JSON format
+3. various rules (a.k.a Program Requirements) are checked against the parsed information to evaluate course progression.
+3. Course progression information will be sent back to Front End.
 
 <br>
 
