@@ -1,0 +1,133 @@
+{
+  "totalCreditPoints": 144,
+  "additionalRules": [
+    {
+      "name": "Level 1 Credit Points Summation",
+      "category": "creditPoints",
+      "tag": 1,
+      "targetValue": 60,
+      "evalOperator": "lte",
+      "operation": "sum"
+    }
+  ],
+  "rules": {
+    "logical": "&&",
+    "group": [
+      {
+        "code": "BIO1011",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "BTH1802",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "CHM1051",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "SCI1020",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "BIO1022",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "ANT1800",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "CHM1052",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "SCI1020",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "BTH2741",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "BTH2830",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "SCI2010",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "PHY2810",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "BTH2732",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "BTH2752",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "PHY2820",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "MBS3800",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "PHA3801",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "PHA3800",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "HUP3810",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "BTH3722",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "BTH3752",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "IMM3802",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "HUP3820",
+        "creditPoints": 6,
+        "tag": 3
+      }
+    ]
+  }
+}

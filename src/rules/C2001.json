@@ -6,7 +6,7 @@
       "category": "creditPoints",
       "tag": 3,
       "targetValue": 36,
-      "evalOperator": "eq",
+      "evalOperator": "mte",
       "operation": "sum"
     },
     {
@@ -22,12 +22,12 @@
     "logical": "&&",
     "group": [
       {
-        "code": "FIT2014",
+        "code": "FIT1045",
         "creditPoints": 6,
-        "tag": 2
+        "tag": 1
       },
       {
-        "code": "FIT1008",
+        "code": "FIT1047",
         "creditPoints": 6,
         "tag": 1
       },
@@ -37,22 +37,22 @@
         "tag": 1
       },
       {
+        "code": "FIT1008",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FIT1043",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
         "code": "MAT1841",
         "creditPoints": 6,
         "tag": 1
       },
       {
-        "code": "FIT1045",
-        "creditPoints": 6,
-        "tag": 1
-      },
-      {
-        "code": "FIT2004",
-        "creditPoints": 6,
-        "tag": 2
-      },
-      {
-        "code": "FIT1047",
+        "code": "FIT1055",
         "creditPoints": 6,
         "tag": 1
       },
@@ -62,27 +62,78 @@
         "tag": 2
       },
       {
+        "code": "FIT2086",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT2004",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT3163",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FIT2094",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT3164",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FIT3179",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
         "logical": "||",
         "group": [
           {
-            "code": "FIT3abc",
-            "creditPoints": 0
+            "code": "FIT3045",
+            "creditPoints": 18,
+            "tag": 3
           },
-          {
-            "code": "FIT3122",
-            "creditPoints": 18
-          },
-          {
-            "code": "FIT3123",
-            "creditPoints": 18
-          },
+
           {
             "code": "FIT3199",
-            "creditPoints": 0
+            "creditPoints": 0,
+            "tag": 3
+          }
+        ]
+      },
+      {
+        "logical": "||",
+        "group": [
+          {
+            "code": "FIT3003",
+            "creditPoints": 6,
+            "tag": 3
           },
           {
-            "code": "FIT3045",
-            "creditPoints": 18
+            "code": "FIT3152",
+            "creditPoints": 6,
+            "tag": 3
+          },
+          {
+            "code": "FIT3181",
+            "creditPoints": 6,
+            "tag": 3
+          },
+          {
+            "code": "FIT3182",
+            "creditPoints": 6,
+            "tag": 3
+          },
+          {
+            "code": "FIT3183",
+            "creditPoints": 6,
+            "tag": 3
           }
         ]
       }

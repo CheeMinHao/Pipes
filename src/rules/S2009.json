@@ -1,0 +1,128 @@
+{
+  "totalCreditPoints": 144,
+  "additionalRules": [
+    {
+      "name": "Level 1 Credit Points Summation",
+      "category": "creditPoints",
+      "tag": 1,
+      "targetValue": 60,
+      "evalOperator": "lte",
+      "operation": "sum"
+    }
+  ],
+  "rules": {
+    "logical": "&&",
+    "group": [
+      {
+        "code": "BIO1011",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "CHM1051",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FST1911",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "FST1800",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "BIO1022",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "CHM1052",
+        "creditPoints": 6,
+        "tag": 1
+      },
+      {
+        "code": "BTH2830",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "BTH2741",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "SCI2010",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FIT2004",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "CHM2922",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "CHM2962",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "STA2216",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FST2810",
+        "creditPoints": 6,
+        "tag": 2
+      },
+      {
+        "code": "FST3800",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "SCI3716",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3820",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3711",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3850",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3840",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3830",
+        "creditPoints": 6,
+        "tag": 3
+      },
+      {
+        "code": "FST3862",
+        "creditPoints": 6,
+        "tag": 3
+      }
+    ]
+  }
+}
