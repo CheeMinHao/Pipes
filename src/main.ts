@@ -7,13 +7,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const corsOptions = {
-    origin: 'http://localhost:3001',
+    origin: ['http://localhost:3001', 'http://localhost:56107'],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   };
   app.use(cors(corsOptions));
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
+  // await app.listen(process.env.PORT || 3000);
   await app.listen(3000);
 }
 bootstrap();

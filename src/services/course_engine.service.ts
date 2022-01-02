@@ -139,7 +139,7 @@ export class CourseEngineService {
         ...obj,
         code,
         creditPoints: 6,
-        tag: parseInt(match[0], 10).toString()[0],
+        tag: parseInt((match?.toString() as any)[0], 10),
       });
     });
 
