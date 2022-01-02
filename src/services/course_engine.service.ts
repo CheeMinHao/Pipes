@@ -107,7 +107,7 @@ export class CourseEngineService {
       takenCourses.map(({ code }) => code),
     );
 
-    const additionalRulesResult = additionalRules.map((rule) =>
+    const additionalRulesResults = additionalRules.map((rule) =>
       this.processAdditionalRules(takenCourses, rule),
     );
 
@@ -117,8 +117,12 @@ export class CourseEngineService {
     );
 
     return {
+      canGraduate:
+        additionalRulesResults.every(({ result }) => result) &&
+        totalCreditPoints <= creditsTakenByStudents &&
+        coreRulesResults.result,
       coreRulesResults,
-      additionalRulesResult,
+      additionalRulesResults,
       creditsTakenByStudents,
       requiredCreditPoints: totalCreditPoints,
     };
@@ -129,7 +133,14 @@ export class CourseEngineService {
     jsonList.forEach((obj) => {
       const { 'Person ID': id } = obj;
       if (!students[id]) students[id] = [];
-      students[id].push({ ...obj, code: obj['UNIT_CD'], creditPoints: 6 });
+      const code = obj['UNIT_CD'];
+      const match = code.match(/\d+/);
+      students[id].push({
+        ...obj,
+        code,
+        creditPoints: 6,
+        tag: parseInt(match[0], 10).toString()[0],
+      });
     });
 
     return Object.keys(students).map((key) => {
@@ -139,7 +150,7 @@ export class CourseEngineService {
         course: `${currentStudent['COURSE_CD']} ${currentStudent['CRS_TITLE']}`,
         name: `${currentStudent['Given names']} ${currentStudent['Surname']}`,
         takenUnits: students[key].map(({ code }) => code),
-        result: this.processStudent(
+        ...this.processStudent(
           {
             isInternational: true,
             courseCode: currentStudent['COURSE_CD'],
